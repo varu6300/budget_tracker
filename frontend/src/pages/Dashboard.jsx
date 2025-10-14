@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { IconDashboard, IconTransactions, IconCards, IconBank, IconBell, IconSettings, NavIcon } from '../components/Icons.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api.js';
-import { fetchTransactions, createTransaction, resetTransactions } from '../services/transactions.js';
+import { fetchTransactions, createTransaction, resetTransactions, getTransactionHistory, getCategories, updateTransaction, deleteTransaction } from '../services/transactions.js';
+import PieChart from '../components/PieChart.jsx';
 
 export default function Dashboard() {
   const { user, logout, setUser } = useAuth();
@@ -13,6 +16,14 @@ export default function Dashboard() {
   const [txLoading, setTxLoading] = useState(false);
   const [form, setForm] = useState({ amount:'', type:'INCOME', description:'', category:'' });
   const [formError, setFormError] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({ amount:'', type:'INCOME', description:'', category:'' });
 
   useEffect(() => {
     let ignore = false;
@@ -40,18 +51,29 @@ export default function Dashboard() {
 
   useEffect(()=>{
     let ignore = false;
-    async function load(){
+    async function loadInitial(){
       try{
         setTxLoading(true);
-        const data = await fetchTransactions();
-        if(!ignore) setTransactions(data);
-      }catch(e){
-        // swallow; summary error already displayed
-      }finally{ if(!ignore) setTxLoading(false); }
+        // fetch quick latest for initial view
+        const latest = await fetchTransactions();
+        if(!ignore) setTransactions(latest);
+        const cats = await getCategories();
+        if(!ignore) setCategories(cats);
+      } finally { if(!ignore) setTxLoading(false); }
     }
-    load();
+    loadInitial();
     return ()=>{ignore=true};
   }, []);
+
+  async function loadHistory(p=page){
+    setTxLoading(true);
+    try {
+      const data = await getTransactionHistory({ page:p, size, type: typeFilter || undefined, category: categoryFilter || undefined });
+      setTransactions(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setPage(data.number || p);
+    } finally { setTxLoading(false); }
+  }
 
   async function submitTx(e){
     e.preventDefault();
@@ -68,7 +90,12 @@ export default function Dashboard() {
         return;
       }
       const created = await createTransaction(payload);
-      setTransactions(t=> [created, ...t].slice(0,10));
+      // Refresh current history page if filters applied, else prepend
+      if(typeFilter || categoryFilter){
+        loadHistory(0);
+      } else {
+        setTransactions(t=> [created, ...t].slice(0,10));
+      }
       // update summary numbers locally
       setSummary(s => {
         if(!s) return s;
@@ -108,6 +135,38 @@ export default function Dashboard() {
     }
   }
 
+  // Editing helpers
+  function startEdit(t){
+    setEditingId(t.id);
+    setEditDraft({ amount: String(t.amount), type: t.type, description: t.description || '', category: t.category || '' });
+  }
+  function cancelEdit(){ setEditingId(null); }
+  async function saveEdit(id){
+    const payload = { ...editDraft, amount: editDraft.amount ? parseFloat(editDraft.amount) : undefined };
+    const updated = await updateTransaction(id, payload);
+    setTransactions(ts => ts.map(t => t.id === id ? updated : t));
+    setEditingId(null);
+    // update summary locally naive
+    setSummary(s => {
+      if(!s) return s;
+      const old = transactions.find(t=>t.id===id);
+      if(!old) return s;
+      let { currentBalance, totalIncome, totalExpenses } = s;
+      // revert old
+      if(old.type === 'INCOME'){ totalIncome -= Number(old.amount); currentBalance -= Number(old.amount); }
+      else { totalExpenses -= Number(old.amount); currentBalance += Number(old.amount); }
+      // apply new
+      if(updated.type === 'INCOME'){ totalIncome += Number(updated.amount); currentBalance += Number(updated.amount); }
+      else { totalExpenses += Number(updated.amount); currentBalance -= Number(updated.amount); }
+      return { ...s, currentBalance, totalIncome, totalExpenses };
+    });
+  }
+  async function removeTx(id){
+    await deleteTransaction(id);
+    setTransactions(ts => ts.filter(t=>t.id!==id));
+    // Can't precisely adjust summary without fetching; keep as-is or trigger summary reload if needed.
+  }
+
   function handleLogout(){
     logout();
     // redirect handled by ProtectedRoute on next render
@@ -115,29 +174,33 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout">
-      <header className="topbar">
-        <div className="logo">Project Expense Tracking Software</div>
+      {/* Blue header like sample */}
+      <header className="topbar header-blue">
+        <div className="logo">BudgetWise</div>
         <div className="spacer" />
-        <div className="profile-wrapper" onBlur={()=>setTimeout(()=>setOpenMenu(false),150)} tabIndex={0}>
-          <button className="profile-chip" onClick={()=>setOpenMenu(o=>!o)}>
-            <span className="avatar">{user?.username?.charAt(0)?.toUpperCase()}</span>
-            <span className="chip-name">{user?.username}</span>
-            <span className="chevron">▾</span>
-          </button>
-          {openMenu && (
-            <div className="profile-dropdown">
-              <div className="pd-username">Signed in as <strong>{user?.username}</strong></div>
-              <button className="dropdown-item" onClick={handleLogout}>Sign Out</button>
-            </div>
-          )}
-        </div>
+        <nav className="profile-menu">
+          <Link to="/profile" className="ml-link" style={{color:'#fff'}}>Profile</Link>
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        </nav>
       </header>
-      <main className="content wide">
+      {/* Body: left nav | center | right rail */}
+      <div className="dashboard-body">
+        <aside className="sidebar-left">
+          <div style={{fontWeight:700, padding:'6px 10px'}}>Menu</div>
+          <Link to="/dashboard"><NavIcon><IconDashboard /></NavIcon>Dashboard</Link>
+          <Link to="/transactions"><NavIcon><IconTransactions /></NavIcon>Transactions</Link>
+          <Link to="/cards"><NavIcon><IconCards /></NavIcon>Cards</Link>
+          <Link to="/bank-accounts"><NavIcon><IconBank /></NavIcon>Bank Accounts</Link>
+          <Link to="/notifications"><NavIcon><IconBell /></NavIcon>Notifications</Link>
+          <Link to="/settings"><NavIcon><IconSettings /></NavIcon>Settings</Link>
+        </aside>
+        <main className="main-center">
         {error && <div className="error" style={{marginBottom:16}}>{String(error)}</div>}
-  {loading && <div>Loading summary...</div>}
-  {!loading && error && <div className="error" style={{marginBottom:16}}>{String(error)}</div>}
-  {!loading && !error && summary && (
+        {loading && <div>Loading summary...</div>}
+        {!loading && error && <div className="error" style={{marginBottom:16}}>{String(error)}</div>}
+        {!loading && !error && summary && (
           <>
+            <h2 style={{marginTop:0}}>Project Expense Tracking Software</h2>
           <div className="kpi-row" style={{alignItems:'flex-start'}}>
             <div className="kpi-box">
               <div className="kpi-label">Current Balance</div>
@@ -151,46 +214,54 @@ export default function Dashboard() {
               <div className="kpi-label">Total Expenses</div>
               <div className="kpi-number red">${summary.totalExpenses}</div>
             </div>
-            <div className="kpi-box" style={{display:'flex', flexDirection:'column', gap:8}}>
-              <div className="kpi-label">Actions</div>
-              <button onClick={handleReset} style={{background:'#dc2626', color:'#fff', border:'none', padding:'0.5rem 0.75rem', borderRadius:6, cursor:'pointer', fontSize:'0.75rem'}}>Reset Data</button>
-            </div>
           </div>
           <div className="panel-grid">
+            {/* Left panel - Latest Transactions (placeholder) */}
             <div className="panel" style={{minWidth:0}}>
-              <h3 style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>Latest Transactions <span style={{fontSize:'0.75rem', fontWeight:400}}>{txLoading? 'Loading...' : ''}</span></h3>
-              <div className="tx-list" style={{maxHeight:260, overflowY:'auto'}}>
-                {transactions.length === 0 && <div style={{opacity:0.6}}>No transactions yet.</div>}
-                {transactions.map(t => (
-                  <div key={t.id} className="tx-row" style={{display:'grid', gridTemplateColumns:'100px 80px 1fr 1fr', gap:'0.75rem', padding:'0.5rem 0', borderBottom:'1px solid #1f2937'}}>
-                    <div style={{fontVariantNumeric:'tabular-nums'}}>{new Date(t.createdAt).toLocaleDateString()}</div>
-                    <div style={{color: t.type==='INCOME'? '#16a34a': '#dc2626'}}>{t.type}</div>
-                    <div style={{whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{t.description || '-'}</div>
-                    <div style={{textAlign:'right', fontWeight:600}}>{t.type==='EXPENSE'? '-' : ''}${t.amount}</div>
-                  </div>
-                ))}
-              </div>
+              <h3>Latest Transactions</h3>
+              <div className="placeholder-chart">Chart Placeholder</div>
             </div>
+            {/* Right panel - Amount Transfer with rings */}
             <div className="panel" style={{minWidth:0}}>
-              <h3>Add Transaction</h3>
-              <form onSubmit={submitTx} className="tx-form" style={{display:'grid', gap:'0.5rem'}}>
-                <div style={{display:'flex', gap:'0.5rem'}}>
-                  <input name="amount" value={form.amount} onChange={updateField} placeholder="Amount" type="number" step="0.01" required style={{flex:1}} />
-                  <select name="type" value={form.type} onChange={updateField} style={{width:140}}>
-                    <option value="INCOME">Income</option>
-                    <option value="EXPENSE">Expense</option>
-                  </select>
+              <h3>Amount Transfer</h3>
+              <div className="ring-charts">
+                <div className="ring-wrapper">
+                  <div className="ring blue-ring" />
+                  <div className="ring-value">${summary.totalIncome}</div>
                 </div>
-                <input name="description" value={form.description} onChange={updateField} placeholder="Description" />
-                <input name="category" value={form.category} onChange={updateField} placeholder="Category" />
-                {formError && <div style={{color:'#dc2626', fontSize:'0.75rem'}}>{formError}</div>}
-                <button type="submit" className="primary-btn" style={{justifySelf:'start'}}>Add</button>
-              </form>
+                <div className="ring-wrapper">
+                  <div className="ring green-ring" />
+                  <div className="ring-value">${summary.totalExpenses}</div>
+                </div>
+              </div>
             </div>
           </div>
           </>
         )}
-      </main>
+        </main>
+        {/* Right rail summary like sample */}
+        <aside className="right-rail">
+          <div className="rr-user">
+            <div className="rr-avatar">{user?.username?.charAt(0)?.toUpperCase()}</div>
+            <div>
+              <div style={{fontWeight:600}}>{user?.username}</div>
+              <div style={{fontSize:12, color:'#64748b'}}>{user?.email || ''}</div>
+            </div>
+          </div>
+          <div style={{fontWeight:700}}>Latest Transactions</div>
+          <ul className="mini-list">
+            {transactions.slice(0,3).map(t => (
+              <li key={t.id}>
+                <span style={{whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{t.description || t.category || t.type}</span>
+                <span className={t.type==='INCOME' ? 'amt-pos' : 'amt-neg'}>
+                  {t.type==='INCOME' ? '+' : '-'}${t.amount}
+                </span>
+              </li>
+            ))}
+            {transactions.length===0 && <li><span>No recent items</span><span>—</span></li>}
+          </ul>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,42 @@
+<svg width="240" height="80" viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">BudgetWise Color Logo</title>
+  <desc id="desc">A colorful abstract wallet / pie chart shape representing budgeting.</desc>
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff9a9e" />
+      <stop offset="40%" stop-color="#fad0c4" />
+      <stop offset="100%" stop-color="#fad390" />
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a18cd1" />
+      <stop offset="100%" stop-color="#fbc2eb" />
+    </linearGradient>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#84fab0" />
+      <stop offset="100%" stop-color="#8fd3f4" />
+    </linearGradient>
+    <linearGradient id="g4" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fccb90" />
+      <stop offset="100%" stop-color="#d57eeb" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Abstract wallet / container -->
+  <rect x="10" y="12" rx="14" ry="14" width="120" height="56" fill="url(#g1)" filter="url(#shadow)" />
+  <rect x="18" y="20" rx="10" ry="10" width="104" height="40" fill="#ffffff" opacity="0.25" />
+
+  <!-- Pie slices (budget categories) -->
+  <g transform="translate(150 40)">
+    <circle r="28" fill="#ffffff" opacity="0.15" />
+    <path d="M0 0 L0 -28 A28 28 0 0 1 26.9 8.5 Z" fill="url(#g2)" />
+    <path d="M0 0 L26.9 8.5 A28 28 0 0 1 -10 26 Z" fill="url(#g3)" />
+    <path d="M0 0 L-10 26 A28 28 0 0 1 0 -28 Z" fill="url(#g4)" />
+    <circle r="10" fill="#fff" />
+  </g>
+
+  <!-- Brand text -->
+  <text x="10" y="76" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#513c5c" letter-spacing="0.5">BudgetWise</text>
+</svg>
