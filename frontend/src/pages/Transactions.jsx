@@ -81,7 +81,7 @@ export default function TransactionsPage(){
   return (
     <div className="dashboard-layout">
       <header className="topbar header-blue">
-        <div className="logo">Transactions</div>
+        <div className="logo">BudgetWise</div>
         <div className="spacer" />
         <nav className="profile-menu">
           <Link to="/profile" className="ml-link" style={{color:'#4a2e05'}}>Profile</Link>
