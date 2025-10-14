@@ -191,3 +191,7 @@ html, body, #root { height:100%; }
 .auth-link { color:#0f172a; text-decoration:underline; text-underline-offset:3px; }
 .auth-alt { text-align:center; font-size:13px; color:#475569; margin-top:6px; }
 .ml-btn.full { width:100%; text-align:center; justify-content:center; }
+
+/* Logo symbol sizing */
+.logo { display:flex; align-items:center; gap:4px; font-weight:700; font-size:1.05rem; }
+.logo-mark { height:28px; width:28px; display:inline-block; }
