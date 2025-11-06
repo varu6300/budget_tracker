@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import GoalsPage from './pages/Goals.jsx';
 import Income from './pages/Income.jsx';
 import Expenses from './pages/Expenses.jsx';
 import Transactions from './pages/Transactions.jsx';
@@ -34,6 +35,7 @@ export default function App() {
   <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
   <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+  <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
         <Route path="*" element={<div style={{padding:40}}>Not Found</div>} />
       </Routes>
     </AuthProvider>

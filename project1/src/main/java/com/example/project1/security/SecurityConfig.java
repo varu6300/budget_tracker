@@ -42,13 +42,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    @DependsOn("jwtAuthenticationFilter")
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .cors(c -> {})
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/categories/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
             .anyRequest().authenticated()
         )

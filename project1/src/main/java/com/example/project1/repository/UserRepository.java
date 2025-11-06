@@ -6,4 +6,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+
+    // Allow lookup by username OR email to support users who sign in with either identifier.
+    Optional<User> findByUsernameOrEmail(String username, String email);
 }

@@ -24,3 +24,55 @@ api.interceptors.response.use(r => r, err => {
   }
   return Promise.reject(err);
 });
+
+// Savings Goals API
+// NOTE: Backend exposes savings goals under /api/goals with fields
+// targetAmount, savedAmount and deadline. The frontend expects
+// currentAmount and targetDate. These helper wrappers map between
+// the shapes so the UI can stay as-is.
+const toFrontendGoal = (g) => ({
+  id: g.id,
+  name: g.name,
+  targetAmount: g.targetAmount,
+  currentAmount: g.savedAmount || 0,
+  targetDate: g.deadline,
+});
+
+const toBackendGoal = (g) => ({
+  name: g.name,
+  targetAmount: g.targetAmount,
+  savedAmount: g.currentAmount || 0,
+  deadline: g.targetDate || null,
+});
+
+export const getSavingsGoals = async () => {
+  const res = await api.get('/api/goals');
+  // Map backend shape to frontend shape
+  return (res.data || []).map(toFrontendGoal);
+};
+
+export const addSavingsGoal = async (goal) => {
+  const payload = toBackendGoal(goal);
+  const res = await api.post('/api/goals', payload);
+  return toFrontendGoal(res.data);
+};
+
+export const updateSavingsGoal = async (id, goal) => {
+  const payload = toBackendGoal(goal);
+  const res = await api.put(`/api/goals/${id}`, payload);
+  return toFrontendGoal(res.data);
+};
+
+export const deleteSavingsGoal = async (id) => {
+  await api.delete(`/api/goals/${id}`);
+};
+
+export const addAmountToGoal = async (id, amount) => {
+  // Backend doesn't expose a dedicated "add" endpoint, so read the
+  // goal and update its savedAmount atomically from the client.
+  const { data } = await api.get(`/api/goals/${id}`);
+  const current = data.savedAmount || 0;
+  const updated = { ...data, savedAmount: current + amount };
+  const res = await api.put(`/api/goals/${id}`, updated);
+  return toFrontendGoal(res.data);
+};

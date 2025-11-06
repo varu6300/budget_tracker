@@ -1,10 +1,134 @@
 import React, { useEffect, useState } from 'react';
-import { IconDashboard, IconTransactions, IconCards, IconBank, IconBell, IconSettings, NavIcon } from '../components/Icons.jsx';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { getTransactionHistory, getCategories, updateTransaction, deleteTransaction, createTransaction } from '../services/transactions.js';
 
+const styles = {
+  main: {
+    padding: '32px',
+    background: 'linear-gradient(120deg, #f7f7fa 60%, #e9e4f0 100%)',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  card: {
+    background: '#fff',
+    borderRadius: '16px',
+    boxShadow: '0 4px 24px #0002',
+    padding: '2rem',
+    maxWidth: '540px',
+    width: '100%',
+    marginBottom: '2rem',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    background: '#fff',
+    borderRadius: '16px',
+    boxShadow: '0 2px 12px #0001',
+    overflow: 'hidden',
+  },
+  th: {
+    background: 'linear-gradient(90deg, #a4508b 0%, #7c2bc4 100%)',
+    color: '#fff',
+    fontWeight: 600,
+    padding: '14px',
+    fontSize: '1rem',
+    borderBottom: '2px solid #f3f4f6',
+  },
+  td: {
+    padding: '12px',
+    fontSize: '1rem',
+    borderBottom: '1px solid #f3f4f6',
+    background: '#fff',
+  },
+  actionBtn: {
+    background: '#7c2bc4',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '6px 16px',
+    fontWeight: 500,
+    marginRight: '8px',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+  },
+  actionBtnDelete: {
+    background: '#ef4444',
+  },
+  formBtn: {
+    background: 'linear-gradient(90deg, #a4508b 0%, #7c2bc4 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '12px 32px',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    marginTop: '1rem',
+    boxShadow: '0 2px 8px #0001',
+  },
+  input: {
+    width: '100%',
+    padding: '10px',
+    borderRadius: '8px',
+    border: '1px solid #ddd',
+    marginBottom: '1rem',
+    fontSize: '1rem',
+    background: '#f7f7fa',
+  },
+  label: {
+    fontWeight: 500,
+    marginBottom: '0.5rem',
+    display: 'block',
+    color: '#7c2bc4',
+  },
+};
+
+const Sidebar = () => (
+  <aside style={{ width: "220px", background: "#2563eb", color: "#fff", minHeight: "100vh", padding: "32px 0" }}>
+    <div style={{ fontWeight: "bold", fontSize: "1.5rem", marginBottom: "32px", textAlign: "center" }}>Budget Tracker</div>
+    <nav>
+      <ul style={{ listStyle: "none", padding: 0 }}>
+        <li style={{ margin: "24px 0" }}><Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>Dashboard</Link></li>
+        <li style={{ margin: "24px 0" }}><Link to="/transactions" style={{ color: "#fff", textDecoration: "none" }}>Transactions</Link></li>
+        <li style={{ margin: "24px 0" }}><Link to="/goals" style={{ color: "#fff", textDecoration: "none" }}>Goals</Link></li>
+        <li style={{ margin: "24px 0" }}><Link to="/budget" style={{ color: "#fff", textDecoration: "none" }}>Budget</Link></li>
+      </ul>
+    </nav>
+  </aside>
+);
+
+const TopBar = () => (
+  <header style={{ background: "#fff", padding: "16px 32px", boxShadow: "0 2px 8px #0001", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <nav style={{ display: "flex", gap: "32px" }}>
+      <Link to="/dashboard" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Dashboard</Link>
+      <Link to="/transactions" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Transactions</Link>
+      <Link to="/goals" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Goals</Link>
+      <Link to="/budget" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Budget</Link>
+      <Link to="/analytics" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Analytics</Link>
+    </nav>
+    <div style={{ color: "#2563eb", fontWeight: "bold" }}>Profile</div>
+  </header>
+);
+
 export default function TransactionsPage(){
+  // Sidebar button style
+  const sidebarBtn = {
+    display: "flex",
+    alignItems: "center",
+    background: "#fff",
+    borderRadius: "12px",
+    padding: "14px 24px",
+    margin: "0 24px",
+    fontWeight: "500",
+    fontSize: "1.1rem",
+    color: "#222",
+    textDecoration: "none",
+    boxShadow: "0 2px 8px #0001",
+    transition: "background 0.2s, box-shadow 0.2s"
+  };
   const { user, logout } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [txLoading, setTxLoading] = useState(false);
@@ -78,111 +202,85 @@ export default function TransactionsPage(){
 
   function handleLogout(){ logout(); }
 
+  // Transaction table UI
+  function TransactionTable() {
+    if (txLoading) return <div>Loading transactions...</div>;
+    if (!transactions.length) return <div>No transactions found.</div>;
+    return (
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Type</th>
+            <th style={styles.th}>Amount</th>
+            <th style={styles.th}>Category</th>
+            <th style={styles.th}>Description</th>
+            <th style={styles.th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.map(t => (
+            <tr key={t.id}>
+              <td style={{...styles.td, color:t.type==='INCOME'?'#22c55e':'#ef4444'}}>{t.type}</td>
+              <td style={styles.td}>${t.amount}</td>
+              <td style={styles.td}>{t.category}</td>
+              <td style={styles.td}>{t.description}</td>
+              <td style={styles.td}>
+                {editingId === t.id ? (
+                  <>
+                    <button onClick={()=>saveEdit(t.id)} style={styles.actionBtn}>Save</button>
+                    <button onClick={cancelEdit} style={styles.actionBtn}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={()=>startEdit(t)} style={styles.actionBtn}>Edit</button>
+                    <button onClick={()=>removeTx(t.id)} style={{...styles.actionBtn, ...styles.actionBtnDelete}}>Delete</button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  // Add transaction form UI
+  function AddTransactionForm() {
+    return (
+      <form onSubmit={submitTx} style={styles.card}>
+        <h3 style={{marginTop:0, color:'#a4508b'}}>Add Transaction</h3>
+        {formError && <div style={{color:'#ef4444', marginBottom:'1rem'}}>{formError}</div>}
+        <label style={styles.label}>Amount</label>
+        <input type="number" name="amount" value={form.amount} onChange={updateField} style={styles.input} required min={0.01} step={0.01}/>
+        <label style={styles.label}>Type</label>
+        <select name="type" value={form.type} onChange={updateField} style={styles.input}>
+          <option value="INCOME">Income</option>
+          <option value="EXPENSE">Expense</option>
+        </select>
+        <label style={styles.label}>Category</label>
+        <input name="category" value={form.category} onChange={updateField} style={styles.input} list="category-list"/>
+        <datalist id="category-list">
+          {categories.map(c => <option key={c} value={c}/>)}
+        </datalist>
+        <label style={styles.label}>Description</label>
+        <input name="description" value={form.description} onChange={updateField} style={styles.input}/>
+        <button type="submit" style={styles.formBtn}>Add</button>
+      </form>
+    );
+  }
+
   return (
-    <div className="dashboard-layout">
-      <header className="topbar header-blue">
-        <div className="logo">BudgetWise</div>
-        <div className="spacer" />
-        <nav className="profile-menu">
-          <Link to="/profile" className="ml-link" style={{color:'#4a2e05'}}>Profile</Link>
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
-        </nav>
-      </header>
-      <div className="dashboard-body" style={{gridTemplateColumns:'220px 1fr'}}>
-        <aside className="sidebar-left">
-          <div style={{fontWeight:700, padding:'6px 10px'}}>Menu</div>
-          <Link to="/dashboard"><NavIcon><IconDashboard /></NavIcon>Dashboard</Link>
-          <Link to="/transactions"><NavIcon><IconTransactions /></NavIcon>Transactions</Link>
-          <Link to="/cards"><NavIcon><IconCards /></NavIcon>Cards</Link>
-          <Link to="/bank-accounts"><NavIcon><IconBank /></NavIcon>Bank Accounts</Link>
-          <Link to="/notifications"><NavIcon><IconBell /></NavIcon>Notifications</Link>
-          <Link to="/settings"><NavIcon><IconSettings /></NavIcon>Settings</Link>
-        </aside>
-        <main className="main-center">
-
-        <div className="panel-grid">
-          <div className="panel" style={{minWidth:0}}>
-            <h3 style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-              Transactions
-              <span style={{fontSize:'0.75rem', fontWeight:400}}>{txLoading? 'Loading...' : ''}</span>
-            </h3>
-            <div style={{display:'flex', gap:'0.5rem', marginBottom:'0.75rem', flexWrap:'wrap'}}>
-              <select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}>
-                <option value="">All Types</option>
-                <option value="INCOME">Income</option>
-                <option value="EXPENSE">Expense</option>
-              </select>
-              <select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
-                <option value="">All Categories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <button onClick={()=>load(0)} className="ml-btn outline-dark" style={{padding:'6px 10px'}}>Apply</button>
-            </div>
-            <div className="tx-list" style={{maxHeight:360, overflowY:'auto'}}>
-              {transactions.length === 0 && <div style={{opacity:0.6}}>No transactions found.</div>}
-              {transactions.map(t => (
-                <div key={t.id} className="tx-row" style={{display:'grid', gridTemplateColumns:'110px 90px 1fr 1fr 120px', gap:'0.5rem', padding:'0.5rem 0', borderBottom:'1px solid #e5e7eb'}}>
-                  <div style={{fontVariantNumeric:'tabular-nums'}}>{new Date(t.createdAt).toLocaleDateString()}</div>
-                  <div style={{color: t.type==='INCOME'? '#16a34a': '#dc2626'}}>{t.type}</div>
-                  {editingId === t.id ? (
-                    <>
-                      <input value={editDraft.description} onChange={e=>setEditDraft(d=>({...d, description:e.target.value}))} />
-                      <div style={{display:'flex', gap:'0.5rem'}}>
-                        <input style={{width:110}} value={editDraft.amount} onChange={e=>setEditDraft(d=>({...d, amount:e.target.value}))} />
-                        <select value={editDraft.type} onChange={e=>setEditDraft(d=>({...d, type:e.target.value}))}>
-                          <option value="INCOME">INCOME</option>
-                          <option value="EXPENSE">EXPENSE</option>
-                        </select>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{t.description || '-'}</div>
-                      <div style={{textAlign:'right', fontWeight:600}}>{t.type==='EXPENSE'? '-' : ''}${t.amount}</div>
-                    </>
-                  )}
-                  <div style={{display:'flex', gap:'0.5rem', justifyContent:'flex-end'}}>
-                    {editingId === t.id ? (
-                      <>
-                        <button onClick={()=>saveEdit(t.id)} className="ml-btn" style={{padding:'6px 10px'}}>Save</button>
-                        <button onClick={cancelEdit} className="ml-btn outline-dark" style={{padding:'6px 10px'}}>Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={()=>startEdit(t)} className="ml-btn outline-dark" style={{padding:'6px 10px'}}>Edit</button>
-                        <button onClick={()=>removeTx(t.id)} className="ml-btn" style={{padding:'6px 10px', background:'#ef4444'}}>Delete</button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'0.5rem'}}>
-              <div>Page {page+1} / {Math.max(totalPages, 1)}</div>
-              <div style={{display:'flex', gap:'0.5rem'}}>
-                <button disabled={page<=0} onClick={()=>load(page-1)} className="ml-btn outline-dark" style={{padding:'6px 10px'}}>Prev</button>
-                <button disabled={page+1>=totalPages} onClick={()=>load(page+1)} className="ml-btn outline-dark" style={{padding:'6px 10px'}}>Next</button>
-              </div>
-            </div>
+    <div style={{ display: "flex", background: "#f8fafc", minHeight: "100vh" }}>
+      <Sidebar />
+      <div style={{ flex: 1 }}>
+        <TopBar />
+        <main style={{ padding: "32px" }}>
+          <h2 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "24px" }}>Transactions</h2>
+          <div style={{ background: "#fff", borderRadius: "12px", boxShadow: "0 2px 12px #0001", padding: "32px", marginBottom: "32px" }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "bold", marginBottom: "16px" }}>Add Transaction</h3>
+            <AddTransactionForm />
+            <TransactionTable />
           </div>
-
-          <div className="panel" style={{minWidth:0}}>
-            <h3>Add Transaction</h3>
-            <form onSubmit={submitTx} className="tx-form" style={{display:'grid', gap:'0.5rem'}}>
-              <div style={{display:'flex', gap:'0.5rem'}}>
-                <input name="amount" value={form.amount} onChange={updateField} placeholder="Amount" type="number" step="0.01" required style={{flex:1}} />
-                <select name="type" value={form.type} onChange={updateField} style={{width:140}}>
-                  <option value="INCOME">Income</option>
-                  <option value="EXPENSE">Expense</option>
-                </select>
-              </div>
-              <input name="description" value={form.description} onChange={updateField} placeholder="Description" />
-              <input name="category" value={form.category} onChange={updateField} placeholder="Category" />
-              {formError && <div style={{color:'#dc2626', fontSize:'0.75rem'}}>{formError}</div>}
-              <button type="submit" className="primary-btn" style={{justifySelf:'start'}}>Add</button>
-            </form>
-          </div>
-        </div>
         </main>
       </div>
     </div>
