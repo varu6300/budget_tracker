@@ -12,6 +12,8 @@ import BankAccounts from './pages/BankAccounts.jsx';
 import Notifications from './pages/Notifications.jsx';
 import Settings from './pages/Settings.jsx';
 import Landing from './pages/Landing.jsx';
+import Analytics from './pages/Analytics.jsx';
+import Budget from './pages/Budget.jsx';
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx';
 
 function ProtectedRoute({ children }) {
@@ -31,9 +33,11 @@ export default function App() {
   <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
   <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
   <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+  <Route path="/budget" element={<ProtectedRoute><Budget /></ProtectedRoute>} />
   <Route path="/cards" element={<ProtectedRoute><Cards /></ProtectedRoute>} />
   <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
   <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+  <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
   <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
         <Route path="*" element={<div style={{padding:40}}>Not Found</div>} />
