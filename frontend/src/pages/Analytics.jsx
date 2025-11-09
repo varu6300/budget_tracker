@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
 import { api } from '../services/api.js';
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 const Analytics = () => {
   const [monthlyData, setMonthlyData] = useState([]);
@@ -111,7 +112,7 @@ const Analytics = () => {
                         <div style={{ width: '100%', display: 'flex', gap: '8px', alignItems: 'flex-end', justifyContent: 'center', height: '240px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#10b981', marginBottom: '8px' }}>
-                              ${income.toFixed(0)}
+                              {formatCurrency(income)}
                             </div>
                             <div style={{
                               width: '100%',
@@ -125,7 +126,7 @@ const Analytics = () => {
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ef4444', marginBottom: '8px' }}>
-                              ${expenses.toFixed(0)}
+                              {formatCurrency(expenses)}
                             </div>
                             <div style={{
                               width: '100%',
@@ -166,7 +167,7 @@ const Analytics = () => {
               ) : (
                 <div style={{ display: 'grid', gap: '16px' }}>
                   {categoryData.map(({ category, amount }, index) => {
-                    const percentage = ((amount / totalCategoryExpenses) * 100).toFixed(1);
+                    const percentage = totalCategoryExpenses > 0 ? ((amount / totalCategoryExpenses) * 100).toFixed(1) : 0;
                     const colors = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#6366f1'];
                     const color = colors[index % colors.length];
 
@@ -181,12 +182,12 @@ const Analytics = () => {
                           <div style={{ fontWeight: 600, fontSize: '1rem', color: '#374151' }}>{category}</div>
                           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                             <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>{percentage}%</span>
-                            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: color }}>${amount.toFixed(2)}</span>
+                            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: color }}>{formatCurrency(amount)}</span>
                           </div>
                         </div>
                         <div style={{ background: '#e5e7eb', borderRadius: '8px', height: '12px', overflow: 'hidden' }}>
                           <div style={{
-                            width: `${percentage}%`,
+                            width: `${Math.min(percentage, 100)}%`,
                             height: '100%',
                             background: `linear-gradient(90deg, ${color} 0%, ${color}dd 100%)`,
                             borderRadius: '8px',
@@ -221,7 +222,7 @@ const Analytics = () => {
               }}>
                 <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '8px' }}>Avg Monthly Expenses</div>
                 <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>
-                  ${monthlyData.length > 0 ? (monthlyData.reduce((sum, m) => sum + m.expenses, 0) / monthlyData.length).toFixed(0) : '0'}
+                  {formatCurrency(monthlyData.length > 0 ? (monthlyData.reduce((sum, m) => sum + m.expenses, 0) / monthlyData.length) : 0)}
                 </div>
               </div>
               <div style={{
@@ -233,7 +234,7 @@ const Analytics = () => {
               }}>
                 <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '8px' }}>Avg Monthly Income</div>
                 <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>
-                  ${monthlyData.length > 0 ? (monthlyData.reduce((sum, m) => sum + m.income, 0) / monthlyData.length).toFixed(0) : '0'}
+                  {formatCurrency(monthlyData.length > 0 ? (monthlyData.reduce((sum, m) => sum + m.income, 0) / monthlyData.length) : 0)}
                 </div>
               </div>
             </div>

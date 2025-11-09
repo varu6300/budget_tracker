@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
 import { getTransactionHistory, createTransaction } from '../services/transactions.js';
+import { formatCurrency } from '../utils/formatCurrency.js';
+import HeaderCard from "../components/HeaderCard.jsx";
+import { IconGoals } from '../components/Icons.jsx';
 
 export default function IncomePage(){
   const [items, setItems] = useState([]);
@@ -18,7 +21,9 @@ export default function IncomePage(){
 
   async function submit(e){
     e.preventDefault();
-    const payload = { amount: parseFloat(form.amount), type:'INCOME', description: form.description, category: form.category };
+    const raw = typeof form.amount === 'string' ? form.amount.trim().replace(',', '.') : form.amount;
+    const amt = raw ? parseFloat(raw) : 0;
+    const payload = { amount: amt, type:'INCOME', description: form.description, category: form.category };
     await createTransaction(payload);
     setForm({ amount:'', description:'', category:'' });
     load();
@@ -29,22 +34,16 @@ export default function IncomePage(){
   return (
     <Layout>
       <div style={{ maxWidth: 1200 }}>
-        <div style={{background:'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius:'16px', padding:'32px', marginBottom:'32px', color:'#fff', boxShadow:'0 4px 20px rgba(16, 185, 129, 0.3)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <div>
-            <h2 style={{fontSize:'1.8rem', fontWeight:700, margin:0, marginBottom:'8px'}}>💰 Income Management</h2>
-            <p style={{fontSize:'1rem', opacity:0.9, margin:0}}>Track and manage all your income sources</p>
-          </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:'0.9rem', opacity:0.9, marginBottom:'4px'}}>Total Income</div>
-            <div style={{fontSize:'2.5rem', fontWeight:700}}>${totalIncome.toFixed(2)}</div>
-          </div>
-        </div>
+        <HeaderCard title={"💰 Income Management"} subtitle={"Track and manage all your income sources"} rightLabel={"Total Income"} rightValue={formatCurrency(totalIncome)} bg={'linear-gradient(135deg, #10b981 0%, #059669 100%)'} icon={IconGoals} iconSize={28} />
         <div style={{background:'#fff', borderRadius:'16px', padding:'28px', marginBottom:'32px', boxShadow:'0 2px 12px rgba(0,0,0,0.08)'}}>
           <h3 style={{fontSize:'1.2rem', fontWeight:700, marginBottom:'20px', color:'#1f2937'}}>➕ Add New Income</h3>
           <form onSubmit={submit} style={{display:'grid', gridTemplateColumns:'1fr 2fr 1fr auto', gap:'16px', alignItems:'end'}}>
             <div>
               <label style={{display:'block', fontSize:'0.9rem', fontWeight:600, color:'#374151', marginBottom:'8px'}}>Amount</label>
-              <input placeholder="0.00" type="number" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f, amount:e.target.value}))} required style={{width:'100%', padding:'12px', borderRadius:'8px', border:'1.5px solid #e5e7eb', fontSize:'1rem', background:'#f9fafb'}} />
+              <div style={{position:'relative'}}>
+                <span style={{position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#6b7280'}}>₹</span>
+                <input placeholder="0.00" type="text" inputMode="decimal" value={form.amount} onChange={e=>setForm(f=>({...f, amount:e.target.value}))} required style={{width:'100%', padding:'12px', paddingLeft:'36px', borderRadius:'8px', border:'1.5px solid #e5e7eb', fontSize:'1rem', background:'#f9fafb'}} />
+              </div>
             </div>
             <div>
               <label style={{display:'block', fontSize:'0.9rem', fontWeight:600, color:'#374151', marginBottom:'8px'}}>Description</label>
@@ -73,7 +72,7 @@ export default function IncomePage(){
                   <div style={{fontSize:'0.9rem', color:'#6b7280'}}>{new Date(t.createdAt).toLocaleDateString()}</div>
                   <div style={{fontWeight:600, color:'#374151'}}>{t.description || 'Income'}</div>
                   <div style={{fontSize:'0.9rem', color:'#6b7280'}}>{t.category || 'Uncategorized'}</div>
-                  <div style={{fontSize:'1.2rem', fontWeight:700, color:'#10b981', textAlign:'right'}}>+${t.amount.toFixed(2)}</div>
+                  <div style={{fontSize:'1.2rem', fontWeight:700, color:'#10b981', textAlign:'right'}}>+{formatCurrency(t.amount)}</div>
                 </div>
               ))}
             </div>

@@ -73,3 +73,13 @@ export const IconSettings = ({variant='color'}) => variant==='line' ? (
 export const NavIcon = ({children}) => (
   <span style={{display:'inline-flex', width:18, marginRight:8, alignItems:'center', justifyContent:'center'}}>{children}</span>
 );
+
+export const IconGoals = ({variant='color', size=18}) => variant==='line' ? (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 3"/></svg>
+) : (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" fill="#ffdede" />
+    <circle cx="12" cy="12" r="5" fill="#ff7aa2" />
+    <path d="M12 7v5l3 3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  </svg>
+);

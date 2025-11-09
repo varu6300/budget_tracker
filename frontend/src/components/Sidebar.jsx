@@ -8,8 +8,7 @@ const Sidebar = () => (
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         <li style={{ margin: "24px 0" }}><Link to="/dashboard" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>Dashboard</Link></li>
         <li style={{ margin: "24px 0" }}><Link to="/transactions" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>Transactions</Link></li>
-        <li style={{ margin: "24px 0" }}><Link to="/goals" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>Goals</Link></li>
-        <li style={{ margin: "24px 0" }}><Link to="/budget" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>Budget</Link></li>
+  <li style={{ margin: "24px 0" }}><Link to="/goals" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>Goals</Link></li>
       </ul>
     </nav>
   </aside>

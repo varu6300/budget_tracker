@@ -76,7 +76,7 @@ export default function Landing() {
       <section className="ml-metrics">
         <div className="metric-card"><div className="metric-label">Deposit Amount</div><div className="metric-value">4,700</div></div>
         <div className="metric-card"><div className="metric-label">Establishment Fee</div><div className="metric-value">20%</div></div>
-        <div className="metric-card"><div className="metric-label">Annual</div><div className="metric-value">$700.00</div></div>
+  <div className="metric-card"><div className="metric-label">Annual</div><div className="metric-value">₹700.00</div></div>
       </section>
 
       <section className="ml-cards">

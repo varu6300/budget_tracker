@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 const data = [
   { category: "Dining", budgeted: 300, spent: 340, percent: 113, status: "Over" },
@@ -19,7 +20,7 @@ const BudgetActuals = () => (
       <div key={row.category} style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600, fontSize: 15 }}>
           <span>{row.category}</span>
-          <span>${row.budgeted} <span style={{ color: '#bbb', fontWeight: 400 }}>/ ${row.spent}</span> <span style={{ color: statusColor(row.status), fontWeight: 700 }}>{row.percent}%</span></span>
+          <span>{formatCurrency(row.budgeted)} <span style={{ color: '#bbb', fontWeight: 400 }}>/ {formatCurrency(row.spent)}</span> <span style={{ color: statusColor(row.status), fontWeight: 700 }}>{row.percent}%</span></span>
           <span style={{ color: statusColor(row.status), fontWeight: 700 }}>{row.status}</span>
         </div>
         <div style={{ background: "#e0e7ef", borderRadius: 8, height: 8, width: "100%", marginTop: 6, overflow: "hidden" }}>

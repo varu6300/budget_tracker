@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
 import { api } from '../services/api.js';
+import { Link } from 'react-router-dom';
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 const Dashboard = () => {
   const [summary, setSummary] = useState({ balance: 0, income: 0, expenses: 0 });
@@ -50,7 +52,7 @@ const Dashboard = () => {
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '12px', fontWeight: 500 }}>💰 Current Balance</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>${summary.balance.toFixed(2)}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{formatCurrency(summary.balance)}</div>
             </div>
             <div style={{
               position: 'absolute',
@@ -72,7 +74,7 @@ const Dashboard = () => {
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '12px', fontWeight: 500 }}>📈 Total Income</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>${summary.income.toFixed(2)}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{formatCurrency(summary.income)}</div>
             </div>
             <div style={{
               position: 'absolute',
@@ -94,7 +96,7 @@ const Dashboard = () => {
           }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '12px', fontWeight: 500 }}>📉 Total Expenses</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>${summary.expenses.toFixed(2)}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{formatCurrency(summary.expenses)}</div>
             </div>
             <div style={{
               position: 'absolute',
@@ -116,9 +118,9 @@ const Dashboard = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, color: '#1f2937' }}>Recent Transactions</h3>
-              <a href="/transactions" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+              <Link to="/transactions" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
                 View All →
-              </a>
+              </Link>
             </div>
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>Loading...</div>
@@ -166,7 +168,7 @@ const Dashboard = () => {
                       fontWeight: 700,
                       color: tx.type === 'INCOME' ? '#10b981' : '#ef4444'
                     }}>
-                      {tx.type === 'INCOME' ? '+' : '-'}${tx.amount.toFixed(2)}
+                      {tx.type === 'INCOME' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </div>
                   </div>
                 ))}
@@ -183,9 +185,7 @@ const Dashboard = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, color: '#1f2937' }}>Budget Status</h3>
-              <a href="/budget" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
-                Manage →
-              </a>
+              <div style={{ color: '#9ca3af', fontSize: '0.9rem' }}>Manage</div>
             </div>
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>Loading...</div>
@@ -196,9 +196,10 @@ const Dashboard = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {budgets.slice(0, 4).map(budget => {
-                  const spent = budget.spent || 0;
-                  const percentage = ((spent / budget.amount) * 100).toFixed(0);
-                  const isOver = spent > budget.amount;
+                  const spent = parseFloat(budget.spent) || 0;
+                  const amt = parseFloat(budget.amount) || 0;
+                  const percentage = amt > 0 ? ((spent / amt) * 100).toFixed(0) : 0;
+                  const isOver = amt > 0 ? spent > amt : false;
 
                   return (
                     <div key={budget.id} style={{
@@ -213,8 +214,8 @@ const Dashboard = () => {
                           {percentage}%
                         </div>
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '8px' }}>
-                        ${spent.toFixed(2)} of ${budget.amount.toFixed(2)}
+                        <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '8px' }}>
+                        {formatCurrency(spent)} of {formatCurrency(amt)}
                       </div>
                       <div style={{ background: '#e5e7eb', borderRadius: '8px', height: '8px', overflow: 'hidden' }}>
                         <div style={{

@@ -17,7 +17,7 @@ const Layout = ({ children }) => {
     { path: '/transactions', label: 'Transactions', icon: '💳' },
     { path: '/income', label: 'Income', icon: '💰' },
     { path: '/expenses', label: 'Expenses', icon: '💸' },
-    { path: '/budget', label: 'Budget', icon: '📈' },
+  // Budget page removed
     { path: '/goals', label: 'Goals', icon: '🎯' },
     { path: '/analytics', label: 'Analytics', icon: '📉' },
     { path: '/notifications', label: 'Notifications', icon: '🔔' },

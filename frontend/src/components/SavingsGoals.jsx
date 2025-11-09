@@ -6,6 +6,7 @@ import {
   deleteSavingsGoal,
   addAmountToGoal,
 } from '../services/api';
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 const SavingsGoals = () => {
   const [goals, setGoals] = useState([]);
@@ -37,10 +38,12 @@ const SavingsGoals = () => {
     setLoading(true);
     setError('');
     try {
+      const targRaw = (newGoal.targetAmount || '').toString().trim().replace(',', '.');
+      const currRaw = (newGoal.currentAmount || '').toString().trim().replace(',', '.');
       const added = await addSavingsGoal({
         name: newGoal.name,
-        targetAmount: Number(newGoal.targetAmount),
-        currentAmount: Number(newGoal.currentAmount) || 0,
+        targetAmount: parseFloat(targRaw) || 0,
+        currentAmount: parseFloat(currRaw) || 0,
         targetDate: newGoal.targetDate,
       });
       setGoals([...goals, added]);
@@ -67,10 +70,12 @@ const SavingsGoals = () => {
     setLoading(true);
     setError('');
     try {
+      const targRaw = (editGoal.targetAmount || '').toString().trim().replace(',', '.');
+      const currRaw = (editGoal.currentAmount || '').toString().trim().replace(',', '.');
       const updated = await updateSavingsGoal(editGoalId, {
         name: editGoal.name,
-        targetAmount: Number(editGoal.targetAmount),
-        currentAmount: Number(editGoal.currentAmount),
+        targetAmount: parseFloat(targRaw) || 0,
+        currentAmount: parseFloat(currRaw) || 0,
         targetDate: editGoal.targetDate,
       });
       setGoals(goals.map((g) => (g.id === editGoalId ? updated : g)));
@@ -126,55 +131,76 @@ const SavingsGoals = () => {
           Money added to your savings goals is <b className="highlight">frozen (locked 🔒)</b> and deducted from your available balance. This ensures you stay committed to your financial targets and don't accidentally spend your savings!
         </span>
       </div>
-      <form onSubmit={editGoalId ? handleUpdateGoal : handleAddGoal} className="goal-form">
-        <input
-          type="text"
-          placeholder="Goal Name"
-          value={editGoalId ? editGoal.name : newGoal.name}
-          onChange={(e) =>
-            editGoalId
-              ? setEditGoal({ ...editGoal, name: e.target.value })
-              : setNewGoal({ ...newGoal, name: e.target.value })
-          }
-          required
-        />
-        <input
-          type="number"
-          placeholder="Target Amount"
-          value={editGoalId ? editGoal.targetAmount : newGoal.targetAmount}
-          onChange={(e) =>
-            editGoalId
-              ? setEditGoal({ ...editGoal, targetAmount: e.target.value })
-              : setNewGoal({ ...newGoal, targetAmount: e.target.value })
-          }
-          required
-        />
-        <input
-          type="number"
-          placeholder="Current Amount"
-          value={editGoalId ? editGoal.currentAmount : newGoal.currentAmount}
-          onChange={(e) =>
-            editGoalId
-              ? setEditGoal({ ...editGoal, currentAmount: e.target.value })
-              : setNewGoal({ ...newGoal, currentAmount: e.target.value })
-          }
-        />
-        <input
-          type="date"
-          placeholder="Target Date"
-          value={editGoalId ? editGoal.targetDate : newGoal.targetDate}
-          onChange={(e) =>
-            editGoalId
-              ? setEditGoal({ ...editGoal, targetDate: e.target.value })
-              : setNewGoal({ ...newGoal, targetDate: e.target.value })
-          }
-          required
-        />
-        <button type="submit" disabled={loading}>
+      <form onSubmit={editGoalId ? handleUpdateGoal : handleAddGoal} className="goal-form-inline">
+        <div className="input-wrap name-wrap">
+          <input
+            type="text"
+            list="goal-suggestions"
+            placeholder="Goal Name"
+            value={editGoalId ? editGoal.name : newGoal.name}
+            onChange={(e) =>
+              editGoalId
+                ? setEditGoal({ ...editGoal, name: e.target.value })
+                : setNewGoal({ ...newGoal, name: e.target.value })
+            }
+            required
+            autoComplete="off"
+          />
+          <datalist id="goal-suggestions">
+            {goals.map(g => <option key={g.id} value={g.name} />)}
+          </datalist>
+        </div>
+
+        <div className="input-wrap amt-wrap">
+          <div className="prefix">₹</div>
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="Target amount"
+            value={editGoalId ? editGoal.targetAmount : newGoal.targetAmount}
+            onChange={(e) =>
+              editGoalId
+                ? setEditGoal({ ...editGoal, targetAmount: e.target.value })
+                : setNewGoal({ ...newGoal, targetAmount: e.target.value })
+            }
+            required
+          />
+        </div>
+
+        <div className="input-wrap amt-wrap small">
+          <div className="prefix">₹</div>
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="Current amount"
+            value={editGoalId ? editGoal.currentAmount : newGoal.currentAmount}
+            onChange={(e) =>
+              editGoalId
+                ? setEditGoal({ ...editGoal, currentAmount: e.target.value })
+                : setNewGoal({ ...newGoal, currentAmount: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="input-wrap date-wrap">
+          <input
+            type="date"
+            placeholder="Target Date"
+            value={editGoalId ? editGoal.targetDate : newGoal.targetDate}
+            onChange={(e) =>
+              editGoalId
+                ? setEditGoal({ ...editGoal, targetDate: e.target.value })
+                : setNewGoal({ ...newGoal, targetDate: e.target.value })
+            }
+            required
+          />
+        </div>
+
+        <button type="submit" className="add-goal-btn" disabled={loading}>
           {editGoalId ? 'Update Goal' : 'Add Goal'}
         </button>
         {editGoalId && (
-          <button type="button" onClick={() => setEditGoalId(null)}>
+          <button type="button" className="cancel-btn" onClick={() => setEditGoalId(null)}>
             Cancel
           </button>
         )}
@@ -191,7 +217,7 @@ const SavingsGoals = () => {
               <div className="goal-header">
                 <span className="goal-name">{goal.name}</span>
                 <span className="goal-amount">
-                  ${goal.currentAmount} / ${goal.targetAmount}
+                  {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
                 </span>
               </div>
               <div className="progress-bar">
@@ -213,14 +239,15 @@ const SavingsGoals = () => {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const amount = e.target.elements.amount.value;
+                    const amount = e.target.elements.amount.value.replace(',', '.');
                     handleAddAmount(goal.id, amount);
                     e.target.reset();
                   }}
                   className="add-amount-form"
                 >
-                  <input type="number" name="amount" placeholder="Add Amount" min="1" required />
-                  <button type="submit" disabled={loading}>Add</button>
+                  <div className="prefix">₹</div>
+                  <input type="text" name="amount" inputMode="decimal" placeholder="Amount to add" required />
+                  <button type="submit" disabled={loading} className="add-amount-btn">Add</button>
                 </form>
               </div>
             </div>

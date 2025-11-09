@@ -32,7 +32,7 @@ const BudgetManager = () => {
           <option value="Other">Other</option>
         </select>
         <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" style={{ width: "120px", padding: "8px", borderRadius: "6px", border: "1px solid #e0e7ef" }} />
-        <button type="submit" style={{ background: "#2563eb", color: "#fff", fontWeight: "bold", border: "none", borderRadius: "8px", padding: "8px 24px", cursor: "pointer" }}>Add Budget</button>
+        <button type="submit" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', color: "#fff", fontWeight: "bold", border: "none", borderRadius: "8px", padding: "8px 24px", cursor: "pointer", boxShadow: '0 6px 18px rgba(99,102,241,0.18)' }}>Add Budget</button>
       </form>
       {budgets.length === 0 ? (
         <div style={{ color: "#666", marginTop: "24px" }}>No budgets set for this month. Add one above to get started.</div>

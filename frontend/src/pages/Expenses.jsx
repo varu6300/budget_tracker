@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
 import { getTransactionHistory, createTransaction } from '../services/transactions.js';
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 export default function ExpensesPage(){
   const [items, setItems] = useState([]);
@@ -36,7 +37,7 @@ export default function ExpensesPage(){
           </div>
           <div style={{textAlign:'right'}}>
             <div style={{fontSize:'0.9rem', opacity:0.9, marginBottom:'4px'}}>Total Expenses</div>
-            <div style={{fontSize:'2.5rem', fontWeight:700}}>${totalExpenses.toFixed(2)}</div>
+            <div style={{fontSize:'2.5rem', fontWeight:700}}>{formatCurrency(totalExpenses)}</div>
           </div>
         </div>
         <div style={{background:'#fff', borderRadius:'16px', padding:'28px', marginBottom:'32px', boxShadow:'0 2px 12px rgba(0,0,0,0.08)'}}>
@@ -44,7 +45,10 @@ export default function ExpensesPage(){
           <form onSubmit={submit} style={{display:'grid', gridTemplateColumns:'1fr 2fr 1fr auto', gap:'16px', alignItems:'end'}}>
             <div>
               <label style={{display:'block', fontSize:'0.9rem', fontWeight:600, color:'#374151', marginBottom:'8px'}}>Amount</label>
-              <input placeholder="0.00" type="number" step="0.01" value={form.amount} onChange={e=>setForm(f=>({...f, amount:e.target.value}))} required style={{width:'100%', padding:'12px', borderRadius:'8px', border:'1.5px solid #e5e7eb', fontSize:'1rem', background:'#f9fafb'}} />
+              <div style={{position:'relative'}}>
+                <span style={{position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#6b7280'}}>₹</span>
+                <input placeholder="0.00" type="text" inputMode="decimal" value={form.amount} onChange={e=>setForm(f=>({...f, amount:e.target.value}))} required style={{width:'100%', padding:'12px', paddingLeft:'36px', borderRadius:'8px', border:'1.5px solid #e5e7eb', fontSize:'1rem', background:'#f9fafb'}} />
+              </div>
             </div>
             <div>
               <label style={{display:'block', fontSize:'0.9rem', fontWeight:600, color:'#374151', marginBottom:'8px'}}>Description</label>
@@ -76,7 +80,7 @@ export default function ExpensesPage(){
                   <div style={{fontSize:'0.9rem', color:'#6b7280'}}>{new Date(t.createdAt).toLocaleDateString()}</div>
                   <div style={{fontWeight:600, color:'#374151'}}>{t.description || 'Expense'}</div>
                   <div style={{fontSize:'0.9rem', color:'#6b7280'}}>{t.category || 'Uncategorized'}</div>
-                  <div style={{fontSize:'1.2rem', fontWeight:700, color:'#ef4444', textAlign:'right'}}>-${t.amount.toFixed(2)}</div>
+                  <div style={{fontSize:'1.2rem', fontWeight:700, color:'#ef4444', textAlign:'right'}}>-{formatCurrency(t.amount)}</div>
                 </div>
               ))}
             </div>

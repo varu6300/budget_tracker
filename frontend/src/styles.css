@@ -398,15 +398,50 @@ html, body, #root { height:100%; }
 	box-shadow: 0 2px 12px rgba(80,80,120,0.07);
 }
 .tx-row {
-	display: grid;
-	grid-template-columns: 110px 90px 1fr 1fr 120px;
-	gap: 0.5rem;
-	padding: 0.9rem 1.2rem;
-	align-items: center;
-	background: rgba(255,255,255,0.92);
-	border-bottom: 1.5px solid #f1f3fa;
-	transition: background 0.18s, box-shadow 0.18s;
-	border-radius: 0;
+}
+
+/* Goals / Savings styles */
+.goals-card {
+	width: 100%;
+	background: #fff;
+	border-radius: 14px;
+	padding: 22px;
+	box-shadow: 0 6px 28px rgba(16,24,40,0.06);
+}
+.goals-card h3 { margin-top:0; font-size:1.18rem; }
+.info-alert { background:#f1f5f9; border-left:4px solid #60a5fa; padding:12px 14px; border-radius:8px; color:#334155; margin-bottom:18px; }
+.info-alert .info-icon { margin-right:8px; }
+.goal-form-inline { display:flex; gap:12px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+.goal-form-inline .input-wrap { position:relative; }
+.goal-form-inline .name-wrap { flex:1 1 320px; }
+.goal-form-inline .amt-wrap { flex:0 0 160px; }
+.goal-form-inline .amt-wrap.small { flex:0 0 120px; }
+.goal-form-inline .date-wrap { flex:0 0 160px; }
+.goal-form-inline input[type="text"], .goal-form-inline input[type="date"] { padding:10px 12px; border-radius:8px; border:1px solid #e6eefb; background:#fff; min-width:0; }
+.goal-form-inline .prefix { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#64748b; pointer-events:none; }
+.goal-form-inline .amt-wrap input { padding-left:34px; }
+.add-goal-btn { background: linear-gradient(135deg,#8b5cf6 0%, #6366f1 100%); color:#fff; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; }
+.cancel-btn { background:transparent; border:none; color:#374151; padding:8px 12px; cursor:pointer; }
+.goals-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:8px; }
+.goal-item { background:#fafafa; border-radius:12px; padding:16px; border:1px solid #eef2ff; }
+.goal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.goal-name { font-weight:700; color:#0f172a; }
+.goal-amount { color:#374151; font-weight:700; }
+.progress-bar { height:10px; background:#f1f5f9; border-radius:6px; overflow:hidden; margin-bottom:10px; }
+.progress { height:100%; background:linear-gradient(90deg,#34d399,#10b981); }
+.goal-details { font-size:0.95rem; color:#475569; display:flex; gap:12px; flex-direction:column; }
+.goal-status { padding:10px; border-radius:8px; margin-top:8px; }
+.goal-actions { display:flex; gap:10px; align-items:center; margin-top:12px; }
+.goal-actions button { border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.goal-actions button:nth-child(1) { background:transparent; color:#2563eb; }
+.goal-actions button:nth-child(2) { background:transparent; color:#ef4444; }
+.add-amount-form { display:flex; gap:8px; align-items:center; margin-left:auto; }
+.add-amount-form .prefix { position:static; margin-left:4px; color:#374151; }
+.add-amount-form input { padding:8px 10px; min-width:100px; border-radius:8px; border:1px solid #e6eefb; }
+.add-amount-btn { background:#10b981; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.add-amount-btn:hover { background:#059669; }
+.tx-row:last-child {
+    border-bottom: none;
 }
 .tx-row:last-child {
 	border-bottom: none;
@@ -600,10 +635,27 @@ html, body, #root { height:100%; }
 .auth-title { margin:0; font-size:26px; font-weight:800; color:#0f172a; }
 .auth-sub { margin:0 0 6px; color:#475569; }
 .auth-card form { display:flex; flex-direction:column; gap:12px; }
-.auth-card label { display:flex; flex-direction:column; give :6px; font-size:14px; color:#0f172a; }
+.auth-card label { display:flex; flex-direction:column; gap:6px; font-size:14px; color:#0f172a; }
 .auth-card input { padding:12px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:14px; }
 .auth-row { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#475569; }
 .auth-remember { display:flex; align-items:center; gap:8px; }
 .auth-link { color:#0f172a; text-decoration:underline; text-underline-offset:3px; }
 .auth-alt { text-align:center; font-size:13px; color:#475569; margin-top:6px; }
 .ml-btn.full { width:100%; text-align:center; justify-content:center; }
+
+/* Remove number input spinner arrows so users can freely type amounts */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+input[type=number] {
+	appearance: textfield;
+	-moz-appearance: textfield; /* Firefox */
+}
+
+/* Optional: apply to inputs inside forms used for transactions to be safe */
+.add-tx-form input[type=number], .add-tx-form-modern input[type=number], .card input[type=number] {
+	appearance: textfield;
+	-moz-appearance: textfield;
+}

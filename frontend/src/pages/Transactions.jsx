@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { getTransactionHistory, getCategories, updateTransaction, deleteTransaction, createTransaction } from '../services/transactions.js';
+import Layout from '../components/Layout.jsx';
+import HeaderCard from '../components/HeaderCard.jsx';
+import { IconTransactions } from '../components/Icons.jsx';
+import { formatCurrency } from '../utils/formatCurrency.js';
 
 const styles = {
   main: {
@@ -86,32 +90,7 @@ const styles = {
   },
 };
 
-const Sidebar = () => (
-  <aside style={{ width: "220px", background: "#2563eb", color: "#fff", minHeight: "100vh", padding: "32px 0" }}>
-    <div style={{ fontWeight: "bold", fontSize: "1.5rem", marginBottom: "32px", textAlign: "center" }}>Budget Tracker</div>
-    <nav>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        <li style={{ margin: "24px 0" }}><Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>Dashboard</Link></li>
-        <li style={{ margin: "24px 0" }}><Link to="/transactions" style={{ color: "#fff", textDecoration: "none" }}>Transactions</Link></li>
-        <li style={{ margin: "24px 0" }}><Link to="/goals" style={{ color: "#fff", textDecoration: "none" }}>Goals</Link></li>
-        <li style={{ margin: "24px 0" }}><Link to="/budget" style={{ color: "#fff", textDecoration: "none" }}>Budget</Link></li>
-      </ul>
-    </nav>
-  </aside>
-);
-
-const TopBar = () => (
-  <header style={{ background: "#fff", padding: "16px 32px", boxShadow: "0 2px 8px #0001", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-    <nav style={{ display: "flex", gap: "32px" }}>
-      <Link to="/dashboard" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Dashboard</Link>
-      <Link to="/transactions" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Transactions</Link>
-      <Link to="/goals" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Goals</Link>
-      <Link to="/budget" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Budget</Link>
-      <Link to="/analytics" style={{ color: "#2563eb", fontWeight: "bold", textDecoration: "none" }}>Analytics</Link>
-    </nav>
-    <div style={{ color: "#2563eb", fontWeight: "bold" }}>Profile</div>
-  </header>
-);
+// Use shared Layout instead of local Sidebar/TopBar for consistent UI
 
 export default function TransactionsPage(){
   // Sidebar button style
@@ -171,7 +150,9 @@ export default function TransactionsPage(){
   }
   function cancelEdit(){ setEditingId(null); }
   async function saveEdit(id){
-    const payload = { ...editDraft, amount: editDraft.amount ? parseFloat(editDraft.amount) : undefined };
+    const raw = typeof editDraft.amount === 'string' ? editDraft.amount.trim().replace(',', '.') : editDraft.amount;
+    const parsed = raw ? parseFloat(raw) : undefined;
+    const payload = { ...editDraft, amount: parsed };
     const updated = await updateTransaction(id, payload);
     setTransactions(ts => ts.map(t => t.id === id ? updated : t));
     setEditingId(null);
@@ -183,8 +164,10 @@ export default function TransactionsPage(){
     e.preventDefault();
     setFormError(null);
     try {
+      const raw = typeof form.amount === 'string' ? form.amount.trim().replace(',', '.') : form.amount;
+      const amt = raw ? parseFloat(raw) : 0;
       const payload = {
-        amount: form.amount ? parseFloat(form.amount) : 0,
+        amount: amt,
         type: form.type,
         description: form.description || null,
         category: form.category || null
@@ -221,7 +204,7 @@ export default function TransactionsPage(){
           {transactions.map(t => (
             <tr key={t.id}>
               <td style={{...styles.td, color:t.type==='INCOME'?'#22c55e':'#ef4444'}}>{t.type}</td>
-              <td style={styles.td}>${t.amount}</td>
+              <td style={styles.td}>{formatCurrency(t.amount)}</td>
               <td style={styles.td}>{t.category}</td>
               <td style={styles.td}>{t.description}</td>
               <td style={styles.td}>
@@ -251,7 +234,27 @@ export default function TransactionsPage(){
         <h3 style={{marginTop:0, color:'#a4508b'}}>Add Transaction</h3>
         {formError && <div style={{color:'#ef4444', marginBottom:'1rem'}}>{formError}</div>}
         <label style={styles.label}>Amount</label>
-        <input type="number" name="amount" value={form.amount} onChange={updateField} style={styles.input} required min={0.01} step={0.01}/>
+        {/* Use text input with decimal inputMode so users can type freely (no native spinner),
+            but still accept numbers. We normalize commas to dots before parsing. */}
+        <input
+          type="text"
+          inputMode="decimal"
+          name="amount"
+          value={form.amount}
+          onChange={updateField}
+          onFocus={(e) => {
+            // If the input has a legacy 0.00 value, clear it so the user can type immediately
+            if (e.target.value === '0.00') {
+              setForm(f => ({ ...f, amount: '' }));
+            }
+          }}
+          autoComplete="off"
+          autoFocus={true}
+          style={styles.input}
+          required
+          placeholder="0.00"
+          pattern="[0-9]*([.,][0-9]+)?"
+        />
         <label style={styles.label}>Type</label>
         <select name="type" value={form.type} onChange={updateField} style={styles.input}>
           <option value="INCOME">Income</option>
@@ -270,19 +273,15 @@ export default function TransactionsPage(){
   }
 
   return (
-    <div style={{ display: "flex", background: "#f8fafc", minHeight: "100vh" }}>
-      <Sidebar />
-      <div style={{ flex: 1 }}>
-        <TopBar />
-        <main style={{ padding: "32px" }}>
-          <h2 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "24px" }}>Transactions</h2>
-          <div style={{ background: "#fff", borderRadius: "12px", boxShadow: "0 2px 12px #0001", padding: "32px", marginBottom: "32px" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "bold", marginBottom: "16px" }}>Add Transaction</h3>
-            <AddTransactionForm />
-            <TransactionTable />
-          </div>
-        </main>
+    <Layout>
+      <div style={{ maxWidth: 1100 }}>
+  <HeaderCard title={"Transactions"} subtitle={"Add and manage transactions"} rightLabel={""} rightValue={""} bg={'linear-gradient(135deg, #a4508b 0%, #7c2bc4 100%)'} icon={IconTransactions} iconSize={28} />
+        <div style={{ background: "#fff", borderRadius: "12px", boxShadow: "0 2px 12px #0001", padding: "32px", marginBottom: "32px" }}>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "bold", marginBottom: "16px" }}>Add Transaction</h3>
+          <AddTransactionForm />
+          <TransactionTable />
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }
