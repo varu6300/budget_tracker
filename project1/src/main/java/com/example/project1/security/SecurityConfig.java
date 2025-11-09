@@ -61,8 +61,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration cfg = new CorsConfiguration();
+    // allow local frontend origins (vite/dev server and other local ports)
     cfg.addAllowedOriginPattern("http://localhost:5173");
     cfg.addAllowedOriginPattern("http://127.0.0.1:5173");
+    cfg.addAllowedOriginPattern("http://localhost:5000");
+    cfg.addAllowedOriginPattern("http://127.0.0.1:5000");
     cfg.setAllowCredentials(true);
     cfg.addAllowedHeader("*");
     cfg.addAllowedMethod("*");
