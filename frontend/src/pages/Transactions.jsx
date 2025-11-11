@@ -125,6 +125,7 @@ export default function TransactionsPage(){
   const [formError, setFormError] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
   const amountRef = useRef(null);
+  const editInputRef = useRef(null);
   const LOCAL_KEY = 'budget_transactions_v1';
 
   function saveLocal(txArr){
@@ -202,6 +203,17 @@ export default function TransactionsPage(){
     setEditingId(t.id);
     setEditDraft({ amount: String(t.amount), type: t.type, description: t.description || '', category: t.category || '' });
   }
+  // Auto-focus the inline edit input when editingId changes
+  useEffect(()=>{
+    if(editingId && editInputRef.current){
+      try{
+        editInputRef.current.focus();
+        // move caret to end
+        const val = editInputRef.current.value || '';
+        editInputRef.current.setSelectionRange(val.length, val.length);
+      }catch(e){}
+    }
+  }, [editingId]);
   function updateEditField(e){ const { name, value } = e.target; setEditDraft(d=>({ ...d, [name]: value })); }
   function cancelEdit(){ setEditingId(null); }
   async function saveEdit(id){
@@ -277,7 +289,7 @@ export default function TransactionsPage(){
               </td>
               <td style={styles.td} onClick={(e)=>{ if(editingId !== t.id) startEdit(t); }}>
                 {editingId === t.id ? (
-                  <input name="amount" value={editDraft.amount} onChange={updateEditField} inputMode="decimal" style={{...styles.input, padding:'8px'}} />
+                  <input ref={editInputRef} name="amount" value={editDraft.amount} onChange={updateEditField} inputMode="decimal" style={{...styles.input, padding:'8px'}} />
                 ) : formatCurrency(t.amount)}
               </td>
               <td style={styles.td}>
