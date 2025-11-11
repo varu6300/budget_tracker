@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { getTransactionHistory, getCategories, updateTransaction, deleteTransaction, createTransaction } from '../services/transactions.js';
@@ -124,6 +124,7 @@ export default function TransactionsPage(){
   const [form, setForm] = useState({ amount:'', type:'INCOME', description:'', category:'' });
   const [formError, setFormError] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
+  const amountRef = useRef(null);
 
   useEffect(()=>{
     let ignore = false;
@@ -231,32 +232,37 @@ export default function TransactionsPage(){
 
   // Add transaction form UI
   function AddTransactionForm() {
+    // amountRef is declared above in the parent component so we can programmatically
+    // focus it if a click doesn't reach the input due to layout overlays.
     return (
       <form onSubmit={submitTx} style={styles.card}>
         <h3 style={{marginTop:0, color:'#a4508b'}}>Add Transaction</h3>
         {formError && <div style={{color:'#ef4444', marginBottom:'1rem'}}>{formError}</div>}
-  <label htmlFor="tx-amount" style={styles.label}>Amount</label>
-        {/* Use text input with decimal inputMode so users can type freely (no native spinner),
-            but still accept numbers. We normalize commas to dots before parsing. */}
-        <input
-          id="tx-amount"
-          type="text"
-          inputMode="decimal"
-          name="amount"
-          value={form.amount}
-          onChange={updateField}
-          onFocus={(e) => {
-            // If the input has a legacy 0.00 value, clear it so the user can type immediately
-            if (e.target.value === '0.00') {
-              setForm(f => ({ ...f, amount: '' }));
-            }
-          }}
-          autoComplete="off"
-          style={styles.input}
-          required
-          placeholder="0.00"
-          pattern="[0-9]*([.,][0-9]+)?"
-        />
+        <div onClick={() => amountRef.current && amountRef.current.focus()} style={{cursor:'text'}}>
+          <label htmlFor="tx-amount" style={styles.label}>Amount</label>
+          {/* Use text input with decimal inputMode so users can type freely (no native spinner),
+              but still accept numbers. We normalize commas to dots before parsing. */}
+          <input
+            ref={amountRef}
+            id="tx-amount"
+            type="text"
+            inputMode="decimal"
+            name="amount"
+            value={form.amount}
+            onChange={updateField}
+            onFocus={(e) => {
+              // If the input has a legacy 0.00 value, clear it so the user can type immediately
+              if (e.target.value === '0.00') {
+                setForm(f => ({ ...f, amount: '' }));
+              }
+            }}
+            autoComplete="off"
+            style={styles.input}
+            required
+            placeholder="0.00"
+            pattern="[0-9]*([.,][0-9]+)?"
+          />
+        </div>
         <label htmlFor="tx-type" style={styles.label}>Type</label>
         <select id="tx-type" name="type" value={form.type} onChange={updateField} style={styles.input}>
           <option value="INCOME">Income</option>
@@ -265,10 +271,10 @@ export default function TransactionsPage(){
         <label htmlFor="tx-category" style={styles.label}>Category</label>
         <input id="tx-category" name="category" value={form.category} onChange={updateField} style={styles.input} list="category-list" onFocus={(e)=>e.target.focus()} />
         <datalist id="category-list">
-          {categories.map(c => <option key={c} value={c}/>)}
+          {categories.map(c => <option key={c} value={c}/>) }
         </datalist>
-  <label htmlFor="tx-description" style={styles.label}>Description</label>
-  <input id="tx-description" name="description" value={form.description} onChange={updateField} style={styles.input} onFocus={(e)=>e.target.focus()} />
+        <label htmlFor="tx-description" style={styles.label}>Description</label>
+        <input id="tx-description" name="description" value={form.description} onChange={updateField} style={styles.input} onFocus={(e)=>e.target.focus()} />
         <button type="submit" style={styles.formBtn}>Add</button>
       </form>
     );
@@ -277,7 +283,7 @@ export default function TransactionsPage(){
   return (
     <Layout>
       <div style={{ maxWidth: 1100 }}>
-  <HeaderCard title={"Transactions"} subtitle={"Add and manage transactions"} rightLabel={""} rightValue={""} bg={'linear-gradient(135deg, #a4508b 0%, #7c2bc4 100%)'} icon={IconTransactions} iconSize={28} />
+        <HeaderCard title={"Transactions"} subtitle={"Add and manage transactions"} rightLabel={""} rightValue={""} bg={'linear-gradient(135deg, #a4508b 0%, #7c2bc4 100%)'} icon={IconTransactions} iconSize={28} />
         <div style={{ background: "#fff", borderRadius: "12px", boxShadow: "0 2px 12px #0001", padding: "32px", marginBottom: "32px" }}>
           <h3 style={{ fontSize: "1.3rem", fontWeight: "bold", marginBottom: "16px" }}>Add Transaction</h3>
           <AddTransactionForm />
