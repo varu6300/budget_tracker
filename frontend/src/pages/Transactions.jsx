@@ -202,6 +202,7 @@ export default function TransactionsPage(){
     setEditingId(t.id);
     setEditDraft({ amount: String(t.amount), type: t.type, description: t.description || '', category: t.category || '' });
   }
+  function updateEditField(e){ const { name, value } = e.target; setEditDraft(d=>({ ...d, [name]: value })); }
   function cancelEdit(){ setEditingId(null); }
   async function saveEdit(id){
     const raw = typeof editDraft.amount === 'string' ? editDraft.amount.trim().replace(',', '.') : editDraft.amount;
@@ -266,10 +267,29 @@ export default function TransactionsPage(){
         <tbody>
           {transactions.map(t => (
             <tr key={t.id}>
-              <td style={{...styles.td, color:t.type==='INCOME'?'#22c55e':'#ef4444'}}>{t.type}</td>
-              <td style={styles.td}>{formatCurrency(t.amount)}</td>
-              <td style={styles.td}>{t.category}</td>
-              <td style={styles.td}>{t.description}</td>
+              <td style={{...styles.td, color:t.type==='INCOME'?'#22c55e':'#ef4444'}}>
+                {editingId === t.id ? (
+                  <select name="type" value={editDraft.type} onChange={updateEditField} style={{...styles.input, padding:'8px'}}>
+                    <option value="INCOME">Income</option>
+                    <option value="EXPENSE">Expense</option>
+                  </select>
+                ) : t.type}
+              </td>
+              <td style={styles.td} onClick={()=>startEdit(t)}>
+                {editingId === t.id ? (
+                  <input name="amount" value={editDraft.amount} onChange={updateEditField} inputMode="decimal" style={{...styles.input, padding:'8px'}} />
+                ) : formatCurrency(t.amount)}
+              </td>
+              <td style={styles.td}>
+                {editingId === t.id ? (
+                  <input name="category" value={editDraft.category} onChange={updateEditField} style={styles.input} />
+                ) : t.category}
+              </td>
+              <td style={styles.td}>
+                {editingId === t.id ? (
+                  <input name="description" value={editDraft.description} onChange={updateEditField} style={styles.input} />
+                ) : t.description}
+              </td>
               <td style={styles.td}>
                 {editingId === t.id ? (
                   <>
