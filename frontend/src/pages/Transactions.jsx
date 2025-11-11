@@ -125,13 +125,24 @@ export default function TransactionsPage(){
   const [formError, setFormError] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
   const amountRef = useRef(null);
+  const LOCAL_KEY = 'budget_transactions_v1';
+
+  function saveLocal(txArr){
+    try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(txArr || [])); }catch(e){}
+  }
+  function loadLocal(){
+    try{ const v = localStorage.getItem(LOCAL_KEY); return v ? JSON.parse(v) : []; }catch(e){ return []; }
+  }
 
   useEffect(()=>{
     let ignore = false;
     async function boot(){
+      // show cached transactions immediately, then load fresh from server
+      const cached = loadLocal();
+      if(!ignore && cached && cached.length) setTransactions(cached);
       const cats = await getCategories().catch(()=>[]);
       if(!ignore) setCategories(cats);
-      load(0);
+      await load(0);
     }
     boot();
     return ()=>{ignore=true};
@@ -141,9 +152,15 @@ export default function TransactionsPage(){
     setTxLoading(true);
     try{
       const data = await getTransactionHistory({ page:p, size, type: typeFilter || undefined, category: categoryFilter || undefined });
-      setTransactions(data.content || []);
+      const list = data.content || [];
+      setTransactions(list);
+      saveLocal(list);
       setTotalPages(data.totalPages || 0);
       setPage(data.number || p);
+    } catch(err){
+      // fallback to local cache if network/server fails
+      const cached = loadLocal();
+      if(cached && cached.length) setTransactions(cached);
     } finally { setTxLoading(false); }
   }
 
@@ -176,13 +193,22 @@ export default function TransactionsPage(){
         category: form.category || null
       };
       if(!payload.amount || payload.amount <=0){ setFormError('Amount must be > 0'); return; }
-      await createTransaction(payload);
-      // If a new category was typed, add it to the categories state so it appears in filter dropdown
-      if(payload.category && !categories.includes(payload.category)){
-        setCategories(cs => [...cs, payload.category].sort((a,b)=>a.localeCompare(b)));
+      try{
+        const created = await createTransaction(payload);
+        // add to UI and cache
+        setTransactions(prev => { const next = [created, ...prev]; saveLocal(next); return next; });
+        if(payload.category && !categories.includes(payload.category)){
+          setCategories(cs => [...cs, payload.category].sort((a,b)=>a.localeCompare(b)));
+        }
+      }catch(apiErr){
+        // offline or server error: save locally so it persists across reloads
+        const localTx = { id: 'local-' + Date.now(), amount: amt, type: payload.type, description: payload.description, category: payload.category, createdAt: new Date().toISOString(), _local:true };
+        setTransactions(prev => { const next = [localTx, ...prev]; saveLocal(next); return next; });
+        setFormError('Saved locally (offline). Will remain after reload.');
       }
       setForm({ amount:'', type: form.type, description:'', category:'' });
-      load(0);
+      // refresh server list in background (best-effort)
+      load(0).catch(()=>{});
     } catch(e){ setFormError(e?.response?.data?.error || 'Failed to add'); }
   }
 
