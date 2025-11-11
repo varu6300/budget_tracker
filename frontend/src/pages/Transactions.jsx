@@ -227,6 +227,15 @@ export default function TransactionsPage(){
   async function removeTx(id){ await deleteTransaction(id); setTransactions(ts => ts.filter(t=>t.id!==id)); }
 
   function updateField(e){ const { name, value } = e.target; setForm(f=> ({ ...f, [name]: value })); }
+
+  // Robust handler for amount input to allow multi-digit typing and keep decimals/commas
+  function handleAmountChange(e){
+    let v = e.target.value || '';
+    // strip any non-digit, non-dot, non-comma characters (e.g., stray currency symbols)
+    v = String(v).replace(/[^0-9.,]/g, '');
+    // allow multiple digits; keep as entered so user can type freely
+    setForm(f => ({ ...f, amount: v }));
+  }
   async function submitTx(e){
     e.preventDefault();
     setFormError(null);
@@ -330,8 +339,8 @@ export default function TransactionsPage(){
       <form onSubmit={submitTx} style={styles.card}>
         <h3 style={{marginTop:0, color:'#a4508b'}}>Add Transaction</h3>
         {formError && <div style={{color:'#ef4444', marginBottom:'1rem'}}>{formError}</div>}
-        <div onClick={() => amountRef.current && amountRef.current.focus()} style={{cursor:'text'}}>
-          <label htmlFor="tx-amount" style={styles.label}>Amount</label>
+            <div style={{cursor:'text'}}>
+              <label htmlFor="tx-amount" style={styles.label}>Amount</label>
           {/* Use text input with decimal inputMode so users can type freely (no native spinner),
               but still accept numbers. We normalize commas to dots before parsing. */}
           <input
@@ -340,8 +349,8 @@ export default function TransactionsPage(){
             type="text"
             inputMode="decimal"
             name="amount"
-            value={form.amount}
-            onChange={updateField}
+                value={form.amount}
+                onChange={handleAmountChange}
             onFocus={(e) => {
               // If the input has a legacy 0.00 value, clear it so the user can type immediately
               if (e.target.value === '0.00') {
