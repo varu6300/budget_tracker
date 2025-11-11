@@ -81,6 +81,8 @@ const styles = {
     marginBottom: '1rem',
     fontSize: '1rem',
     background: '#f7f7fa',
+    position: 'relative',
+    zIndex: 1,
   },
   label: {
     fontWeight: 500,
@@ -233,10 +235,11 @@ export default function TransactionsPage(){
       <form onSubmit={submitTx} style={styles.card}>
         <h3 style={{marginTop:0, color:'#a4508b'}}>Add Transaction</h3>
         {formError && <div style={{color:'#ef4444', marginBottom:'1rem'}}>{formError}</div>}
-        <label style={styles.label}>Amount</label>
+  <label htmlFor="tx-amount" style={styles.label}>Amount</label>
         {/* Use text input with decimal inputMode so users can type freely (no native spinner),
             but still accept numbers. We normalize commas to dots before parsing. */}
         <input
+          id="tx-amount"
           type="text"
           inputMode="decimal"
           name="amount"
@@ -249,24 +252,23 @@ export default function TransactionsPage(){
             }
           }}
           autoComplete="off"
-          autoFocus={true}
           style={styles.input}
           required
           placeholder="0.00"
           pattern="[0-9]*([.,][0-9]+)?"
         />
-        <label style={styles.label}>Type</label>
-        <select name="type" value={form.type} onChange={updateField} style={styles.input}>
+        <label htmlFor="tx-type" style={styles.label}>Type</label>
+        <select id="tx-type" name="type" value={form.type} onChange={updateField} style={styles.input}>
           <option value="INCOME">Income</option>
           <option value="EXPENSE">Expense</option>
         </select>
-        <label style={styles.label}>Category</label>
-        <input name="category" value={form.category} onChange={updateField} style={styles.input} list="category-list"/>
+        <label htmlFor="tx-category" style={styles.label}>Category</label>
+        <input id="tx-category" name="category" value={form.category} onChange={updateField} style={styles.input} list="category-list" onFocus={(e)=>e.target.focus()} />
         <datalist id="category-list">
           {categories.map(c => <option key={c} value={c}/>)}
         </datalist>
-        <label style={styles.label}>Description</label>
-        <input name="description" value={form.description} onChange={updateField} style={styles.input}/>
+  <label htmlFor="tx-description" style={styles.label}>Description</label>
+  <input id="tx-description" name="description" value={form.description} onChange={updateField} style={styles.input} onFocus={(e)=>e.target.focus()} />
         <button type="submit" style={styles.formBtn}>Add</button>
       </form>
     );
