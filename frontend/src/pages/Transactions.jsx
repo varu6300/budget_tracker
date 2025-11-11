@@ -134,6 +134,32 @@ export default function TransactionsPage(){
     try{ const v = localStorage.getItem(LOCAL_KEY); return v ? JSON.parse(v) : []; }catch(e){ return []; }
   }
 
+  // Attempt to sync locally-saved transactions to server. Runs on boot and periodically.
+  async function syncLocalTransactions(){
+    const all = loadLocal();
+    if(!all || !all.length) return;
+    const locals = all.filter(t => t && (t._local || (typeof t.id === 'string' && t.id.startsWith('local-'))));
+    if(!locals.length) return;
+    for(const l of locals){
+      try{
+        // Build payload expected by server
+        const payload = { amount: Number(l.amount), type: l.type, description: l.description, category: l.category };
+        const created = await createTransaction(payload);
+        // Replace local entry in current transactions state and localStorage with server-created one
+        setTransactions(prev => {
+          const next = prev.map(p => (p.id === l.id ? created : p));
+          // if local entry not present (rare), prepend
+          if(!next.find(x => x && x.id === created.id)) next.unshift(created);
+          saveLocal(next);
+          return next;
+        });
+      }catch(err){
+        // keep local entry and continue; we can retry later
+        console.debug('syncLocalTransactions: failed to sync', l.id, err?.message || err);
+      }
+    }
+  }
+
   useEffect(()=>{
     let ignore = false;
     async function boot(){
@@ -143,9 +169,17 @@ export default function TransactionsPage(){
       const cats = await getCategories().catch(()=>[]);
       if(!ignore) setCategories(cats);
       await load(0);
+      // try to sync any local transactions after loading server data
+      syncLocalTransactions().catch(()=>{});
     }
     boot();
     return ()=>{ignore=true};
+  }, []);
+
+  // periodic sync (best-effort) every 30s
+  useEffect(()=>{
+    const id = setInterval(()=>{ syncLocalTransactions().catch(()=>{}); }, 30000);
+    return ()=> clearInterval(id);
   }, []);
 
   async function load(p=0){
