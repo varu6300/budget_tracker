@@ -287,7 +287,7 @@ export default function TransactionsPage(){
                   </select>
                 ) : t.type}
               </td>
-              <td style={styles.td} onClick={(e)=>{ if(editingId !== t.id) startEdit(t); }}>
+              <td style={styles.td} onDoubleClick={(e)=>{ if(editingId !== t.id) startEdit(t); }}>
                 {editingId === t.id ? (
                   <input ref={editInputRef} name="amount" value={editDraft.amount} onChange={updateEditField} inputMode="decimal" style={{...styles.input, padding:'8px'}} />
                 ) : formatCurrency(t.amount)}
